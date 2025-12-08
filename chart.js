@@ -1,344 +1,274 @@
-// Main data storage
-let userTransactions = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded');
+let balanceChart = null;
+let categoryChart = null;
+
+
+function updateCharts(transactions = []) {
+
+    const totals = calculateTotalsFromTransactions(transactions);
+    
+  
+    const categoryData = {};
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            categoryData[t.category] = (categoryData[t.category] || 0) + t.amount;
+        }
+    });
+
+ 
+    const categories = Object.keys(categoryData);
+    const amounts = Object.values(categoryData);
+    
+   
+    const hasTransactionData = transactions.length > 0;
+    const hasExpenseData = categories.length > 0;
+
+    
+    updateBalanceChart(totals, hasTransactionData);
+    
+   
+    updateCategoryChart(categories, amounts, hasExpenseData);
+}
+
+
+function calculateTotalsFromTransactions(transactions) {
+    const income = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const expense = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const balance = income - expense;
+
+    return { balance, income, expense };
+}
+
+
+function updateBalanceChart(totals, hasData) {
+    const balanceCanvas = document.getElementById('balanceChart');
+    if (!balanceCanvas) {
+        console.error('Balance chart canvas not found!');
         return;
     }
     
-    // Load user transactions
-    loadUserTransactions();
+    const balanceCtx = balanceCanvas.getContext('2d');
     
-    // Initialize chart
-    initializeCashflowChart();
-    
-    // Set up event listeners
-    setupChartControls();
-    
-    // Update UI with current stats
-    updateFinancialStats();
-});
-
-// Load transactions from localStorage
-function loadUserTransactions() {
-    const saved = localStorage.getItem('cashflowTransactions');
-    
-    if (saved) {
-        userTransactions = JSON.parse(saved);
-        console.log(`Loaded ${userTransactions.length} transactions`);
-    } else {
-        // Initialize with sample data if empty
-        userTransactions = getInitialTransactions();
-        saveTransactions();
-    }
-}
-
-// Save transactions to localStorage
-function saveTransactions() {
-    localStorage.setItem('cashflowTransactions', JSON.stringify(userTransactions));
-}
-
-// Initialize the cashflow chart
-function initializeCashflowChart() {
-    const canvas = document.getElementById('cashflowChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destroy existing chart
-    if (window.cashflowChart) {
-        window.cashflowChart.destroy();
+   
+    if (balanceChart) {
+        balanceChart.destroy();
     }
     
-    // Get selected year
-    const selectedYear = document.getElementById('yearSelector')?.value || new Date().getFullYear();
-    
-    // Process data for selected year
-    const { monthlyNet, monthlyIncome, monthlyExpenses } = processYearlyData(selectedYear);
-    
-    // Create the chart
-    window.cashflowChart = new Chart(ctx, {
+ 
+    balanceChart = new Chart(balanceCtx, {
         type: 'bar',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [
-                {
-                    label: 'Net Cash Flow',
-                    data: monthlyNet,
-                    backgroundColor: monthlyNet.map(value => 
-                        value >= 0 ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255, 99, 132, 0.7)'
-                    ),
-                    borderColor: monthlyNet.map(value => 
-                        value >= 0 ? 'rgba(76, 175, 80, 1)' : 'rgba(255, 99, 132, 1)'
-                    ),
-                    borderWidth: 1,
-                    borderRadius: 5,
-                }
-            ]
+            labels: ['Income', 'Expenses', 'Balance'],
+            datasets: [{
+                label: 'Amount (CFA)',
+                data: [
+                    hasData ? totals.income : 0,
+                    hasData ? totals.expense : 0,
+                    hasData ? totals.balance : 0
+                ],
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.8)',
+                    'rgba(231, 76, 60, 0.8)',
+                    'rgba(52, 152, 219, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(39, 174, 96)',
+                    'rgb(192, 57, 43)',
+                    'rgb(41, 128, 185)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                        }
-                    }
+                    display: false
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
                     callbacks: {
                         label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            
-                            const value = context.raw;
-                            const monthIndex = context.dataIndex;
-                            const income = monthlyIncome[monthIndex];
-                            const expense = monthlyExpenses[monthIndex];
-                            
-                            if (context.datasetIndex === 0) {
-                                label += `CFA ${Math.abs(value).toLocaleString()} `;
-                                label += value >= 0 ? '(Surplus)' : '(Deficit)';
-                                
-                                // Show breakdown in tooltip
-                                return [
-                                    label,
-                                    `Income: CFA ${income.toLocaleString()}`,
-                                    `Expenses: CFA ${expense.toLocaleString()}`
-                                ];
-                            }
-                            return label;
+                            return `CFA ${context.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
                         }
-                    }
+                    },
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12
                 }
             },
             scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                        }
-                    }
-                },
                 y: {
                     beginAtZero: true,
                     grid: {
                         color: 'rgba(0, 0, 0, 0.05)'
                     },
                     ticks: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                        },
                         callback: function(value) {
                             return 'CFA ' + value.toLocaleString();
+                        },
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 13,
+                            weight: 'bold'
                         }
                     }
                 }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
             }
         }
     });
 }
 
-// Process data for a specific year
-function processYearlyData(year) {
-    const monthlyIncome = new Array(12).fill(0);
-    const monthlyExpenses = new Array(12).fill(0);
-    const monthlyNet = new Array(12).fill(0);
+function updateCategoryChart(categories, amounts, hasData) {
+    const categoryCanvas = document.getElementById('categoryChart');
+    if (!categoryCanvas) {
+        console.error('Category chart canvas not found!');
+        return;
+    }
     
-    // Filter transactions for the selected year
-    const yearTransactions = userTransactions.filter(transaction => {
-        const transactionYear = new Date(transaction.date).getFullYear();
-        return transactionYear.toString() === year.toString();
-    });
+    const categoryCtx = categoryCanvas.getContext('2d');
     
-    // Aggregate data by month
-    yearTransactions.forEach(transaction => {
-        const month = new Date(transaction.date).getMonth(); // 0-11
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+    
+    if (!hasData) {
+      
+        categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['No Expenses'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['rgba(200, 200, 200, 0.3)'],
+                    borderColor: ['rgba(200, 200, 200, 0.5)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                cutout: '70%'
+            }
+        });
         
-        if (transaction.type === 'income') {
-            monthlyIncome[month] += transaction.amount;
-            monthlyNet[month] += transaction.amount;
-        } else if (transaction.type === 'expense') {
-            monthlyExpenses[month] += transaction.amount;
-            monthlyNet[month] -= transaction.amount;
-        }
-    });
     
-    return { monthlyIncome, monthlyExpenses, monthlyNet };
-}
+        const ctx = categoryCtx;
+        const width = categoryCanvas.width;
+        const height = categoryCanvas.height;
+        
+       
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = '#999';
+        ctx.fillText('No expenses yet', width / 2, height / 2);
+        ctx.restore();
+        
+    } else {
+      
+        const generateColors = (count) => {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 137.5) % 360;
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        };
 
-// Setup chart controls
-function setupChartControls() {
-    const yearSelector = document.getElementById('yearSelector');
-    if (yearSelector) {
-        yearSelector.addEventListener('change', function() {
-            updateChart();
-            updateFinancialStats();
+       
+        categoryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: generateColors(categories.length),
+                    borderColor: 'white',
+                    borderWidth: 2,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: {
+                                size: 12
+                            },
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const total = amounts.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `${context.label}: CFA ${context.raw.toLocaleString()} (${percentage}%)`;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1000
+                }
+            }
         });
     }
-    
-    // Time filter buttons
-    document.querySelectorAll('.time-filter').forEach(button => {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('.time-filter').forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            // You could implement different views here (monthly vs yearly)
-        });
-    });
 }
 
-// Update chart with current data
-function updateChart() {
-    if (window.cashflowChart) {
-        window.cashflowChart.destroy();
-    }
-    initializeCashflowChart();
-}
 
-// Update financial statistics
-function updateFinancialStats() {
-    const selectedYear = document.getElementById('yearSelector')?.value || new Date().getFullYear();
-    const { monthlyIncome, monthlyExpenses } = processYearlyData(selectedYear);
+function initCharts() {
     
-    // Calculate totals
-    const totalIncome = monthlyIncome.reduce((sum, val) => sum + val, 0);
-    const totalExpenses = monthlyExpenses.reduce((sum, val) => sum + val, 0);
-    const netBalance = totalIncome - totalExpenses;
+    const savedData = localStorage.getItem('expenseTrackerTransactions');
+    const transactions = savedData ? JSON.parse(savedData) : [];
     
-    // Update UI
-    document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
-    document.getElementById('totalExpenses').textContent = totalExpenses.toLocaleString();
     
-    const netBalanceElement = document.getElementById('netBalance');
-    netBalanceElement.textContent = `CFA ${Math.abs(netBalance).toLocaleString()}`;
-    netBalanceElement.className = netBalance >= 0 ? 'stat-value positive' : 'stat-value negative';
-    
-    // Add indicator
-    netBalanceElement.innerHTML += netBalance >= 0 ? 
-        ' <span style="color:#4CAF50">▲</span>' : 
-        ' <span style="color:#FF6384">▼</span>';
+    updateCharts(transactions);
 }
+document.addEventListener('DOMContentLoaded', initCharts);
 
-// Function to add a new transaction (connect this to your "Add Transaction" button)
-function addTransaction(transactionData) {
-    const newTransaction = {
-        id: Date.now(),
-        ...transactionData,
-        date: transactionData.date || new Date().toISOString().split('T')[0],
-        time: transactionData.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    };
-    
-    userTransactions.push(newTransaction);
-    saveTransactions();
-    
-    // Update everything
-    updateChart();
-    updateFinancialStats();
-    updateTransactionListUI(); // You'll need to implement this
-    
-    console.log('Transaction added:', newTransaction);
-    return newTransaction;
-}
-
-// Function to delete a transaction
-function deleteTransaction(transactionId) {
-    userTransactions = userTransactions.filter(t => t.id !== transactionId);
-    saveTransactions();
-    
-    updateChart();
-    updateFinancialStats();
-    updateTransactionListUI();
-}
-
-// Sample initial transactions
-function getInitialTransactions() {
-    return [
-        {
-            id: 1,
-            type: "income",
-            category: "Salary",
-            description: "Monthly Salary",
-            amount: 1000000,
-            currency: "CFA",
-            date: "2024-07-28"
-        },
-        {
-            id: 2,
-            type: "expense",
-            category: "Food",
-            description: "Lunch at Restaurant",
-            amount: 5000,
-            currency: "CFA",
-            date: "2024-07-31"
-        },
-        {
-            id: 3,
-            type: "expense",
-            category: "Entertainment",
-            description: "Movie Tickets",
-            amount: 10000,
-            currency: "CFA",
-            date: "2024-07-30"
-        },
-        {
-            id: 4,
-            type: "expense",
-            category: "Shopping",
-            description: "New Shoes",
-            amount: 25000,
-            currency: "CFA",
-            date: "2024-07-25"
-        },
-        {
-            id: 5,
-            type: "income",
-            category: "Freelance",
-            description: "Web Design Project",
-            amount: 150000,
-            currency: "CFA",
-            date: "2024-07-20"
-        }
-    ];
-}
-
-// Helper function to format currency
-function formatCurrency(amount) {
-    return `CFA ${amount.toLocaleString()}`;
-}
-
-// Function to simulate adding a transaction (for testing)
-function simulateAddTransaction() {
-    const types = ['income', 'expense'];
-    const categories = {
-        income: ['Salary', 'Freelance', 'Investment', 'Bonus'],
-        expense: ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills']
-    };
-    
-    const type = types[Math.floor(Math.random() * types.length)];
-    const category = categories[type][Math.floor(Math.random() * categories[type].length)];
-    
-    const transaction = {
-        type: type,
-        category: category,
-        description: `${type === 'income' ? 'Received' : 'Spent on'} ${category.toLowerCase()}`,
-        amount: type === 'income' ? 
-            Math.floor(Math.random() * 500000) + 100000 : 
-            Math.floor(Math.random() * 50000) + 1000,
-        currency: "CFA"
-    };
-    
-    addTransaction(transaction);
-}
+window.updateCharts = updateCharts;

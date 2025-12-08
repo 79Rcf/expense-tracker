@@ -1,240 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Expense-Tracker</title>
-    <link rel="stylesheet" href="style.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-      rel="stylesheet"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Expense Tracker Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for bonus feature -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-wallet"></i>
+                <h1>Expense Tracker Pro</h1>
+            </div>
+            <p class="tagline">Track your money, grow your wealth</p>
+        </header>
 
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=trending_up"
-    />
-  </head>
-  <body>
-    <div class="main-container">
-      <div class="header">
-        <h1 class="header-title">Calm Cashflow 💰</h1>
-      </div>
-
-      <div class="chart-main-container">
-        <div class="chart-container">
-          <div class="chart-header">
-            <h3 class="chart-title">Financial Tracker</h3>
-            <div class="chart-controls">
-              <select class="yearly-expense" id="yearSelector">
-                <option value="2023">2023</option>
-                <option value="2024" selected>2024</option>
-                <option value="2025">2025</option>
-              </select>
-              <button class="time-filter" data-period="month">Monthly</button>
-              <button class="time-filter active" data-period="year">
-                Yearly
-              </button>
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card balance-card">
+                <div class="card-icon">
+                    <i class="fas fa-scale-balanced"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Total Balance</h3>
+                    <p id="totalBalance">CFA 0.00</p>
+                </div>
             </div>
-          </div>
-
-          <div class="chart-wrapper">
-            <canvas id="cashflowChart"></canvas>
-          </div>
-
-          <div class="chart-stats">
-            <div class="stat-item">
-              <span class="stat-label">Total Income:</span>
-              <span class="stat-value income"
-                >CFA <span id="totalIncome">0</span></span
-              >
+            
+            <div class="card income-card">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Total Income</h3>
+                    <p id="totalIncome">CFA 0.00</p>
+                </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Total Expenses:</span>
-              <span class="stat-value expense"
-                >CFA <span id="totalExpenses">0</span></span
-              >
+            
+            <div class="card expense-card">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Total Expenses</h3>
+                    <p id="totalExpense">CFA 0.00</p>
+                </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Net Balance:</span>
-              <span class="stat-value" id="netBalance">CFA 0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="expense-list">
-        <div class="top-card">
-          <div class="expense-card">
-            <div class="detail-income">
-              <p class="card-info">
-                Income <span class="card-info-percentage">91%</span>
-              </p>
-              <span class="material-symbols-outlined">trending_up</span>
-            </div>
-            <p class="card-amount">
-              CFA <span class="card-amount-value">1000</span>
-            </p>
-            <span class="income-deyails">91% of total</span>
-          </div>
-
-          <div class="expense-card">
-            <div class="detail-income">
-              <p class="card-info">
-                Expenses <span class="card-info-percentage">9%</span>
-              </p>
-              <span class="material-symbols-outlined"> trending_up </span>
-            </div>
-            <p class="card-amount">
-              CFA <span class="card-amount-value">1000</span>
-            </p>
-            <span class="income-deyails">91% of income</span>
-          </div>
         </div>
 
-        <div class="bottom-card">
-          <div class="expense-card">
-            <div class="detail-income">
-              <p class="card-info">Investment</p>
-              <span class="material-symbols-outlined"> trending_up </span>
+        <!-- Add Transaction Form -->
+        <section class="form-section">
+            <h2><i class="fas fa-plus-circle"></i> Add Transaction</h2>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="description"><i class="fas fa-pen"></i> Description</label>
+                    <input type="text" id="description" placeholder="e.g., Salary, Groceries, etc." required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="amount"><i class="fas fa-money-bill-wave"></i> Amount (CFA)</label>
+                        <input type="number" id="amount" placeholder="0.00" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="type"><i class="fas fa-filter"></i> Type</label>
+                        <select id="type">
+                            <option value="income">Income (+)</option>
+                            <option value="expense">Expense (-)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date"><i class="far fa-calendar"></i> Date</label>
+                    <input type="date" id="date" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label for="category"><i class="fas fa-tags"></i> Category</label>
+                    <select id="category">
+                        <option value="Salary">Salary</option>
+                        <option value="Freelance">Freelance</option>
+                        <option value="Investment">Investment</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus"></i> Add Transaction
+                </button>
+            </form>
+        </section>
+
+        <!-- Filters -->
+        <section class="filters-section">
+            <h3><i class="fas fa-sliders-h"></i> Filter Transactions</h3>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="income">Income</button>
+                <button class="filter-btn" data-filter="expense">Expenses</button>
+                <button class="filter-btn" data-filter="month">This Month</button>
             </div>
-            <p class="card-amount">
-              CFA <span class="card-amount-value">1000</span>
-            </p>
-            <span class="income-deyails">91% of income</span>
-          </div>
+        </section>
 
-          <div class="expense-card">
-            <div class="detail-income">
-              <p class="card-info">Savings</p>
-              <span class="material-symbols-outlined"> trending_up </span>
+        <!-- Transaction History -->
+        <section class="transactions-section">
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> Transaction History</h2>
+                <p id="transactionCount">0 transactions</p>
             </div>
-            <p class="card-amount">
-              CFA <span class="card-amount-value">1000</span>
-            </p>
-            <span class="income-deyails">Net balance</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-overlay" id="formOverlay">
-        <div class="form-container"></div>
-      </div>
-
-      <div class="transaction">
-        <h4>Transaction</h4>
-        <p class="text-transaction">
-          You had 3 income and 2 expenses this month
-        </p>
-      </div>
-
-      <div class="category" id="dynamicTransactionsContainer">
-      </div>
-
-      <template id="transactionCardTemplate">
-        <div class="category-card" data-transaction-id="">
-          <p class="category-date"></p>
-          <div class="category-items">
-            <span class="category-icon" aria-hidden="true"> </span>
-
-            <div class="category-info">
-              <span class="transaction-description"></span>
-              <br />
-              <button class="category-button"></button>
+            
+            <div class="transactions-list" id="transactionsList">
+                <!-- Transactions will be added here dynamically -->
+                <div class="empty-state">
+                    <i class="fas fa-receipt"></i>
+                    <h3>No transactions yet</h3>
+                    <p>Add your first transaction to get started!</p>
+                </div>
             </div>
+        </section>
 
-            <div class="category-amount-container">
-              <p class="category-amount-value"></p>
-              <button class="transaction-menu-btn" aria-label="More options">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height="24px"
-                  viewBox="0 -960 960 960"
-                  width="24px"
-                  fill="#1f1f1f"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"
-                  />
-                </svg>
-              </button>
+        <!-- Charts Section (Bonus) -->
+        <section class="charts-section">
+            <h2><i class="fas fa-chart-pie"></i> Visual Overview</h2>
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3>Income vs Expenses</h3>
+                    <canvas id="balanceChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Spending by Category</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
             </div>
-          </div>
-        </div>
-      </template>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>💰 Expense Tracker Pro • Data saved locally in your browser</p>
+            <button id="clearAllBtn" class="clear-btn">
+                <i class="fas fa-trash"></i> Clear All Data
+            </button>
+        </footer>
     </div>
 
-    <div class="popup-form" id="popupForm">
-      <div class="card-display">
-        <div class="card-details">
-          <p>Transcation Details</p>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="24px"
-            viewBox="0 -960 960 960"
-            width="24px"
-            fill="#1f1f1f"
-          >
-            <path
-              d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"
-            />
-          </svg>
-        </div>
-
-        <div class="pool-details-card">
-          <div class="pool-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="24px"
-              viewBox="0 -960 960 960"
-              width="24px"
-              fill="#1f1f1f"
-            >
-              <path
-                d="M240-160q-66 0-113-47T80-320v-320q0-66 47-113t113-47h480q66 0 113 47t47 113v320q0 66-47 113t-113 47H240Zm0-480h480q22 0 42 5t38 16v-21q0-33-23.5-56.5T720-720H240q-33 0-56.5 23.5T160-640v21q18-11 38-16t42-5Zm-74 130 445 108q9 2 18 0t17-8l139-116q-11-15-28-24.5t-37-9.5H240q-26 0-45.5 13.5T166-510Z"
-              />
-            </svg>
-
-            <div class="pool-info">
-              <span>Pool</span> <br />
-              <span>Entertainment</span>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
+            <p>Are you sure you want to delete this transaction?</p>
+            <div class="modal-actions">
+                <button id="cancelDelete" class="btn-secondary">Cancel</button>
+                <button id="confirmDelete" class="btn-danger">Delete</button>
             </div>
-
-            <div class="pool-amount">
-              <span>-CFA 9000</span>
-            </div>
-          </div>
-          <div class="pool-total">
-            <span>Date</span> <br />
-            <span>thursday, July 31, 2025</span>
-          </div>
-          <div class="pool-total">
-            <span>Time</span> <br />
-            <span>12:43 PM</span>
-          </div>
-          <div class="pool-total">
-            <span>Category</span> <br />
-            <span>Entertainment</span>
-          </div>
-          <div class="pool-total">
-            <span>Currency</span> <br />
-            <span>CFA</span>
-          </div>
-          <div class="pool-total">
-            <span>Created</span> <br />
-            <span>Jul 31. 2025</span>
-          </div>
-          <div></div>
-          <div class="pool-button">
-            <button class="edit">Edit</button>
-            <button class="delete">Delete</button>
-          </div>
         </div>
-      </div>
     </div>
-  </body>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
+    <script src="script.js"></script>
+    <script src="chart.js"></script>
+</body>
 </html>
