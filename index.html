@@ -6,12 +6,13 @@
     <title>💰 Expense Tracker Pro</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for bonus feature -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+     <div id="toast-container"></div>
+    
     <div class="container">
-        <!-- Header -->
         <header class="header">
             <div class="logo">
                 <i class="fas fa-wallet"></i>
@@ -20,7 +21,6 @@
             <p class="tagline">Track your money, grow your wealth</p>
         </header>
 
-        <!-- Summary Cards -->
         <div class="summary-cards">
             <div class="card balance-card">
                 <div class="card-icon">
@@ -53,7 +53,6 @@
             </div>
         </div>
 
-        <!-- Add Transaction Form -->
         <section class="form-section">
             <h2><i class="fas fa-plus-circle"></i> Add Transaction</h2>
             <form id="transactionForm">
@@ -103,7 +102,6 @@
             </form>
         </section>
 
-        <!-- Filters -->
         <section class="filters-section">
             <h3><i class="fas fa-sliders-h"></i> Filter Transactions</h3>
             <div class="filters">
@@ -114,7 +112,6 @@
             </div>
         </section>
 
-        <!-- Transaction History -->
         <section class="transactions-section">
             <div class="section-header">
                 <h2><i class="fas fa-history"></i> Transaction History</h2>
@@ -122,7 +119,6 @@
             </div>
             
             <div class="transactions-list" id="transactionsList">
-                <!-- Transactions will be added here dynamically -->
                 <div class="empty-state">
                     <i class="fas fa-receipt"></i>
                     <h3>No transactions yet</h3>
@@ -131,7 +127,6 @@
             </div>
         </section>
 
-        <!-- Charts Section (Bonus) -->
         <section class="charts-section">
             <h2><i class="fas fa-chart-pie"></i> Visual Overview</h2>
             <div class="charts-container">
@@ -146,7 +141,6 @@
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="footer">
             <p>💰 Expense Tracker Pro • Data saved locally in your browser</p>
             <button id="clearAllBtn" class="clear-btn">
@@ -155,7 +149,6 @@
         </footer>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
